@@ -24,8 +24,6 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            '*.product_id' => 'required',
-            '*.quantity' => 'required|numeric',
             '*.total_amount' => 'required|numeric',
         ]);
 
@@ -35,28 +33,44 @@ class SaleController extends Controller
             $total += $saleData['total_amount'];
         }
 
-        $sale = Sale::create(['total' => $total]);
+        $sale = Sale::create(['total_amount' => $total]);
 
         foreach ($request->all() as $saleData) {
             ProductSale::create([
-                'sale_id' => $sale->id,
+                'sale_id' => $sale->sale_id,
                 'product_id' => $saleData['product_id'],
-                'quantity' => $saleData['quantity']
+                'quantity' => $saleData['quantity'],
+                'total_amount' => $saleData['total_amount']
             ]);
         }
 
         return response()->json(['message' => 'Venda criada com sucesso'], 201);
     }
 
+
     private function formatSaleDetails($sale)
     {
         if (!($sale instanceof Sale)) {
             return [];
         }
-
-        return [
-            'sale_id' => $sale->sale_id,
-            'amount' => $sale->total,
+    
+        $formattedSale = [
+            'sales_id' => $sale->sale_id,
+            'amount' => $sale->total_amount,
+            'products' => []
         ];
+    
+        foreach ($sale->products as $product) {
+            $formattedSale['products'][] = [
+                'product_id' => $product->product_id,
+                'nome' => $product->name,
+                'price' => $product->pivot->total_amount, 
+                'quantity' => $product->pivot->quantity 
+            ];
+        }
+    
+        return $formattedSale;
     }
+    
+    
 }

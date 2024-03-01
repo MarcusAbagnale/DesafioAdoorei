@@ -9,11 +9,11 @@ class Sale extends Model
 {
     use HasFactory;
     protected $primaryKey = 'sale_id';
-    protected $fillable = ['total'];
+    protected $fillable = ['total_amount'];
 
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_sale', 'sale_id', 'product_id')
-            ->withPivot('quantity'); 
+            ->withPivot('quantity', 'total_amount'); 
     }
 }

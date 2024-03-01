@@ -11,7 +11,7 @@ use App\Http\Controllers\SaleController;
 
 Route::get('/products', [ProductController::class, 'index']);
 
-//Route::get('/sales', [SaleController::class, 'index']);
+Route::get('/sales', [SaleController::class, 'index']);
 
 Route::post('/register-sale', [SaleController::class, 'store']);
 
