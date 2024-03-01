@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\ProductSale;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 
 class SaleController extends Controller
 {
@@ -20,6 +22,18 @@ class SaleController extends Controller
 
         return response()->json($formattedSales);
     }
+
+    public function show($id)
+    {
+        try {
+            $sale = Sale::with('products')->findOrFail($id);
+            $formattedSale = $this->formatSaleDetails($sale);
+            return response()->json($formattedSale);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Venda não encontrada'], 404);
+        }
+    }
+
 
     public function store(Request $request)
     {
@@ -53,24 +67,22 @@ class SaleController extends Controller
         if (!($sale instanceof Sale)) {
             return [];
         }
-    
+
         $formattedSale = [
             'sales_id' => $sale->sale_id,
             'amount' => $sale->total_amount,
             'products' => []
         ];
-    
+
         foreach ($sale->products as $product) {
             $formattedSale['products'][] = [
                 'product_id' => $product->product_id,
                 'nome' => $product->name,
-                'price' => $product->pivot->total_amount, 
-                'quantity' => $product->pivot->quantity 
+                'price' => $product->pivot->total_amount,
+                'quantity' => $product->pivot->quantity
             ];
         }
-    
+
         return $formattedSale;
     }
-    
-    
 }
