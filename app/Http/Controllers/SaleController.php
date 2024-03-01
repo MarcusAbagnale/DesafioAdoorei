@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sale;
-use App\Models\Product;
-
 use Illuminate\Http\Request;
+use App\Models\Sale;
+use App\Models\ProductSale;
 
 class SaleController extends Controller
 {
@@ -25,18 +24,28 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'product_id' => 'required',
-            'quantity' => 'required|numeric',
-            'total_amount' => 'required|numeric',
+            '*.product_id' => 'required',
+            '*.quantity' => 'required|numeric',
+            '*.total_amount' => 'required|numeric',
         ]);
 
-        $sale = Sale::create([
-            'product_id' => $request->product_id,
-            'quantity' => $request->quantity,
-            'total_amount' => $request->total_amount,
-        ]);
+        $total = 0;
 
-        return response()->json(['message' => 'Venda criada com sucesso', 'sale' => $sale], 201);
+        foreach ($request->all() as $saleData) {
+            $total += $saleData['total_amount'];
+        }
+
+        $sale = Sale::create(['total' => $total]);
+
+        foreach ($request->all() as $saleData) {
+            ProductSale::create([
+                'sale_id' => $sale->id,
+                'product_id' => $saleData['product_id'],
+                'quantity' => $saleData['quantity']
+            ]);
+        }
+
+        return response()->json(['message' => 'Venda criada com sucesso'], 201);
     }
 
     private function formatSaleDetails($sale)
@@ -45,31 +54,9 @@ class SaleController extends Controller
             return [];
         }
 
-        $saleDetails = [
+        return [
             'sale_id' => $sale->sale_id,
-            'amount' => $sale->total_amount,
-            'products' => []
+            'amount' => $sale->total,
         ];
-
-        foreach ($sale->products as $product) {
-
-            $productDetails = $this->findProductDetails($product->product_id);
-
-            if ($productDetails) {
-                $saleDetails['products'][] = [
-                    'product_id' => $product->id,
-                    'nome' => $productDetails->name,
-                    'price' => $productDetails->price,
-                    'amount' => $product->pivot->quantity
-                ];
-            }
-        }
-
-        return $saleDetails;
-    }
-
-    private function findProductDetails($productId)
-    {
-        return Product::find($productId);
     }
 }

@@ -12,5 +12,6 @@ class ProductSale extends Model
         'product_id',
         'sale_id',
         'quantity',
+        'total_amount',
     ];
 }
