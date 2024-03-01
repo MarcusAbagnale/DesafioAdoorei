@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Sale;
 use App\Models\ProductSale;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Validator;
 
 class SaleController extends Controller
 {
@@ -59,6 +60,70 @@ class SaleController extends Controller
         return response()->json(['message' => 'Venda criada com sucesso'], 201);
     }
 
+
+
+    public function addProductsToSale($saleId, Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'products' => 'required|array',
+                'products.*.product_id' => 'required|exists:products,product_id',
+                'products.*.quantity' => 'required|integer|min:1',
+                'products.*.total_amount' => 'required|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['error' => $validator->errors()->first()], 400);
+            }
+
+            $sale = Sale::findOrFail($saleId);
+            $totalAmount = 0;
+
+            foreach ($request->input('products') as $productData) {
+                $existingProduct = $sale->products()->where('products.product_id', $productData['product_id'])->first();
+
+                if ($existingProduct) {
+                    $this->updateProductInSale($existingProduct, $productData);
+                } else {
+                    $this->addNewProductToSale($sale, $productData);
+                }
+            }
+
+            foreach ($sale->products as $product) {
+                $totalAmount += $product->pivot->total_amount;
+            }
+
+            $sale->total_amount = $totalAmount;
+            $sale->save();
+
+            return response()->json(['message' => 'Produtos adicionados à venda com sucesso.']);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Venda não encontrada'], 404);
+        }
+    }
+
+
+
+    protected function updateProductInSale($existingProduct, $productData)
+    {
+        $existingProduct->pivot->quantity += $productData['quantity'];
+        $existingProduct->pivot->total_amount += $productData['total_amount'];
+        $existingProduct->pivot->updated_at = now();
+        $existingProduct->pivot->save();
+    }
+
+    protected function addNewProductToSale($sale, $productData)
+    {
+        $now = now();
+        $sale->products()->attach($productData['product_id'], [
+            'quantity' => $productData['quantity'],
+            'total_amount' => $productData['total_amount'],
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+    }
+
+
     public function cancel($id)
     {
         try {
@@ -83,7 +148,7 @@ class SaleController extends Controller
         }
 
         $formattedSale = [
-            'sales_id' => $sale->sale_id,
+            'sale_id' => $sale->sale_id,
             'amount' => $sale->total_amount,
             'products' => []
         ];
