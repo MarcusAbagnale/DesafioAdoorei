@@ -7,7 +7,6 @@ use App\Models\Sale;
 use App\Models\ProductSale;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-
 class SaleController extends Controller
 {
     public function index()
@@ -33,7 +32,6 @@ class SaleController extends Controller
             return response()->json(['error' => 'Venda não encontrada'], 404);
         }
     }
-
 
     public function store(Request $request)
     {
@@ -61,6 +59,22 @@ class SaleController extends Controller
         return response()->json(['message' => 'Venda criada com sucesso'], 201);
     }
 
+    public function cancel($id)
+    {
+        try {
+            $sale = Sale::findOrFail($id);
+
+            if ($sale->cancelled_at !== null) {
+                return response()->json(['message' => 'A venda já foi cancelada.'], 400);
+            }
+
+            $sale->update(['cancelled_at' => now()]);
+
+            return response()->json(['message' => 'Venda cancelada com sucesso.']);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Venda não encontrada'], 404);
+        }
+    }
 
     private function formatSaleDetails($sale)
     {
