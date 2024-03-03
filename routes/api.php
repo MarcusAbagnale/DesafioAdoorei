@@ -1,19 +1,26 @@
 <?php
 
+use App\Http\Controllers\AccessTokenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+Route::post('/token', [AccessTokenController::class, 'generateToken']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+
+    Route::get('/products', [ProductController::class, 'index']);
+
+    Route::prefix('sales')->group(function () {
+        Route::get('/', [SaleController::class, 'index']);
+        Route::get('/{id}', [SaleController::class, 'show']);
+        Route::post('/register', [SaleController::class, 'store']);
+        Route::put('/{id}/cancel', [SaleController::class, 'cancel']);
+        Route::put('/{id}/add-products', [SaleController::class, 'addProductsToSale']); 
+    });
 });

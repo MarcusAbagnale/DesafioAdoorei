@@ -26,7 +26,7 @@ class SaleController extends Controller
     public function show($id)
     {
         try {
-            $sale = Sale::with('products')->findOrFail($id);
+            $sale = Sale::findOrFail($id);
             $formattedSale = $this->formatSaleDetails($sale);
             return response()->json($formattedSale);
         } catch (ModelNotFoundException $e) {
@@ -36,6 +36,7 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
+
         $request->validate([
             '*.total_amount' => 'required|numeric',
         ]);
@@ -132,8 +133,8 @@ class SaleController extends Controller
             if ($sale->cancelled_at !== null) {
                 return response()->json(['message' => 'A venda já foi cancelada.'], 400);
             }
-
-            $sale->update(['cancelled_at' => now()]);
+            $sale->cancelled_at = now();
+            $sale->save();
 
             return response()->json(['message' => 'Venda cancelada com sucesso.']);
         } catch (ModelNotFoundException $e) {
