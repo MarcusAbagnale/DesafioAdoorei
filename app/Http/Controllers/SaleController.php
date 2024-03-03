@@ -26,13 +26,15 @@ class SaleController extends Controller
     public function show($id)
     {
         try {
-            $sale = Sale::findOrFail($id);
+            $id = (int)$id; 
+            $sale = Sale::where('sale_id', $id)->firstOrFail();
             $formattedSale = $this->formatSaleDetails($sale);
             return response()->json($formattedSale);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error' => 'Venda não encontrada'], 404);
         }
     }
+    
 
     public function store(Request $request)
     {
@@ -42,6 +44,8 @@ class SaleController extends Controller
         ]);
 
         $total = 0;
+
+
 
         foreach ($request->all() as $saleData) {
             $total += $saleData['total_amount'];

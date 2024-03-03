@@ -2,68 +2,56 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\SaleController;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Sale;
+use App\Models\Product;
 
-final class SaleControllerTest extends TestCase
+class SaleControllerTest extends TestCase
 {
-    private SaleController $saleController;
-
+    use RefreshDatabase;
+    protected $user;
+    protected $products;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->saleController = new SaleController();
-        $this->app->instance(SaleController::class, $this->saleController);
+        $this->user = User::factory()->create();
     }
 
-
-   /* protected function tearDown(): void
+    /** @test */
+    public function it_can_get_all_sales()
     {
-        parent::tearDown();
+        $this->actingAs($this->user);
 
-        unset($this->saleController);
-    }*/
+        $response = $this->getJson('/api/sales');
 
-    public function testIndex(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->get('/api/sales')
-            ->assertStatus(200);
+        $response->assertStatus(200);
     }
 
-    public function testShow(): void
+    /** @test */
+    /*public function it_can_create_sale()
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->get('/api/sales/23')
-            ->assertStatus(200);
-    }
-/*
-    public function testStore(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->post('/path', [ ])
-            ->assertStatus(200);
-    }
+        $this->actingAs($this->user);
 
-    public function testAddProductsToSale(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->get('/path')
-            ->assertStatus(200);
-    }
+        $data = [
+            [
+                'product_id' => $this->products[0]->id,
+                'quantity' => 2,
+                'total_amount' => 100
+            ],
+            [
+                'product_id' => $this->products[1]->id,
+                'quantity' => 3,
+                'total_amount' => 150
+            ]
+        ];
 
-    public function testCancel(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->get('/path')
-            ->assertStatus(200);
+        $response = $this->postJson('/api/sales', $data);
+
+        $response->assertStatus(201)
+            ->assertJson(['message' => 'Venda criada com sucesso']);
     }*/
 }
