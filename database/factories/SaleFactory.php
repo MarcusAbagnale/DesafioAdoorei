@@ -3,21 +3,21 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Sale;
-use Faker\Generator as Faker;
 
+/**
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Sale>
+ */
 class SaleFactory extends Factory
 {
-    protected $model = Sale::class;
-
-    public function definition()
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
     {
         return [
-            'total_amount' => $this->faker->randomFloat(2, 10, 100),
-            'created_at' => $this->faker->dateTime(),
-            'updated_at' => $this->faker->dateTime(),
-            'cancelled_at' => null, 
+            'total_amount' => $this->faker->randomFloat(2, 10, 1000), // Gera um total aleatório entre 10 e 1000 com até 2 casas decimais
         ];
     }
 }
-
