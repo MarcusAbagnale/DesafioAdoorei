@@ -40,7 +40,7 @@ class SaleControllerTest extends TestCase
         $user = User::factory()->create();
         $sale = Sale::factory()->create();
         $products = Product::factory()->count(2)->create();
-        
+
         foreach ($products as $product) {
             ProductSale::create([
                 'sale_id' => $sale->sale_id,
@@ -49,22 +49,22 @@ class SaleControllerTest extends TestCase
                 'total_amount' => $product->price * 10,
             ]);
         }
-        
+
         $expectedJson = [
             'sale_id',
             'amount',
-            'products', 
+            'products',
         ];
-        
-        
+
+
         $this->actingAs($user);
-        
+
         $response = $this->getJson('/api/sales/' . $sale->sale_id);
-    
+
         $response->assertStatus(200)
-                 ->assertJsonStructure($expectedJson);
+            ->assertJsonStructure($expectedJson);
     }
-    
+
 
     /** @test */
     public function it_can_create_sale()
@@ -90,5 +90,36 @@ class SaleControllerTest extends TestCase
 
         $response->assertStatus(201);
         $response->assertJson(['message' => 'Venda criada com sucesso']);
+    }
+
+
+    public function testCanAddProductsToSale()
+    {
+        $user = User::factory()->create();
+        $sale = Sale::factory()->create();
+        $products = Product::factory()->count(2)->create();
+
+        $productData = [
+            [
+                'product_id' => $products[0]->product_id,
+                'quantity' => 5,
+                'total_amount' => $products[0]->price * 5,
+            ],
+            [
+                'product_id' => $products[1]->product_id,
+                'quantity' => 3,
+                'total_amount' => $products[1]->price * 3,
+            ]
+        ];
+
+        $response = $this->actingAs($user)
+            ->putJson('/api/sales/' . $sale->sale_id . '/add-products', ['products' => $productData]);
+
+        $response->assertStatus(200)
+            ->assertJson(['message' => 'Produtos adicionados à venda com sucesso.']);
+
+        $sale = $sale->fresh();
+        $expectedTotal = $products[0]->price * 5 + $products[1]->price * 3;
+        $this->assertEquals($expectedTotal, $sale->total_amount);
     }
 }
