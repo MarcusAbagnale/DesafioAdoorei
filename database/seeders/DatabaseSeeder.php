@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Product;
 use App\Models\ProductSale;
 use App\Models\Sale;
+use App\Models\User;
 use Database\Factories\ProductSaleFactory;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,5 +20,6 @@ class DatabaseSeeder extends Seeder
         Sale::factory()->count(10)->create();
         Product::factory()->count(10)->create();
         ProductSale::factory()->count(10)->create();
+        User::factory()->count(10)->create();
     }
 }

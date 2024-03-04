@@ -11,7 +11,7 @@ class ProductSale extends Model
 
     protected $table = 'product_sale';
 
-    protected $fillable = ['product_id', 'sale_id', 'quantity'];
+    protected $fillable = ['product_id', 'sale_id', 'quantity', 'total_amount'];
 
     public function product()
     {

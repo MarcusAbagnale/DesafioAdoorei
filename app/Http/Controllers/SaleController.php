@@ -38,22 +38,23 @@ class SaleController extends Controller
 
     public function store(Request $request)
     {
-
         $request->validate([
-            '*.total_amount' => 'required|numeric',
+            'sales.*.total_amount' => 'required|numeric',
         ]);
-
+    
         $total = 0;
-
-
-
-        foreach ($request->all() as $saleData) {
+    
+        foreach ($request->input('sales') as $saleData) {
+            if (!isset($saleData['total_amount'])) {
+                return response()->json(['error' => 'O campo total_amount é obrigatório para cada item da venda'], 400);
+            }
             $total += $saleData['total_amount'];
         }
-
+    
         $sale = Sale::create(['total_amount' => $total]);
+    
+        foreach ($request->input('sales') as $saleData) {
 
-        foreach ($request->all() as $saleData) {
             ProductSale::create([
                 'sale_id' => $sale->sale_id,
                 'product_id' => $saleData['product_id'],
@@ -61,9 +62,10 @@ class SaleController extends Controller
                 'total_amount' => $saleData['total_amount']
             ]);
         }
-
+    
         return response()->json(['message' => 'Venda criada com sucesso'], 201);
     }
+    
 
 
 

@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Sale;
 use App\Models\Product;
+use App\Models\ProductSale;
 
 class SaleControllerTest extends TestCase
 {
@@ -32,26 +34,61 @@ class SaleControllerTest extends TestCase
     }
 
     /** @test */
-    /*public function it_can_create_sale()
+
+    public function testCanGetSaleById()
     {
-        $this->actingAs($this->user);
-
-        $data = [
-            [
-                'product_id' => $this->products[0]->id,
-                'quantity' => 2,
-                'total_amount' => 100
-            ],
-            [
-                'product_id' => $this->products[1]->id,
-                'quantity' => 3,
-                'total_amount' => 150
-            ]
+        $user = User::factory()->create();
+        $sale = Sale::factory()->create();
+        $products = Product::factory()->count(2)->create();
+        
+        foreach ($products as $product) {
+            ProductSale::create([
+                'sale_id' => $sale->sale_id,
+                'product_id' => $product->product_id,
+                'quantity' => 10,
+                'total_amount' => $product->price * 10,
+            ]);
+        }
+        
+        $expectedJson = [
+            'sale_id',
+            'amount',
+            'products', 
         ];
+        
+        
+        $this->actingAs($user);
+        
+        $response = $this->getJson('/api/sales/' . $sale->sale_id);
+    
+        $response->assertStatus(200)
+                 ->assertJsonStructure($expectedJson);
+    }
+    
 
-        $response = $this->postJson('/api/sales', $data);
+    /** @test */
+    public function it_can_create_sale()
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
-        $response->assertStatus(201)
-            ->assertJson(['message' => 'Venda criada com sucesso']);
-    }*/
+        $response = $this->post('/api/sales/register', [
+            'sales' => [
+                [
+                    "product_id" => 1,
+                    "quantity" => 15,
+                    "total_amount" => 8200
+                ],
+                [
+                    "product_id" => 2,
+                    "quantity" => 10,
+                    "total_amount" => 9000
+                ]
+            ]
+        ]);
+
+
+        $response->assertStatus(201);
+        $response->assertJson(['message' => 'Venda criada com sucesso']);
+    }
 }
